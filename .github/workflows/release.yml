@@ -41,7 +41,7 @@ jobs:
           targets: x86_64-unknown-linux-gnu
 
       - name: Install Debian packaging tools
-        run: sudo apt-get update && sudo apt-get install -y debhelper build-essential pkg-config
+        run: sudo apt-get update && sudo apt-get install -y debhelper build-essential pkg-config reprepro gnupg
 
       - name: Cache Cargo dependencies
         uses: actions/cache@v4
@@ -60,3 +60,41 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+        id: semantic-release
+        
+      - name: Set up APT repository
+        if: steps.semantic-release.outputs.new_release_published == 'true'
+        run: |
+          # Setup GPG key for repository signing
+          echo "Setting up GPG key"
+          cat > /tmp/gpg-gen-key << EOF
+          Key-Type: RSA
+          Key-Length: 4096
+          Name-Real: Profile Switcher Release Key
+          Name-Email: bot@github.com
+          Expire-Date: 0
+          %no-protection
+          %commit
+          EOF
+          gpg --batch --gen-key /tmp/gpg-gen-key
+          
+          # Setup APT repository
+          echo "Setting up APT repository"
+          ./scripts/setup-repository.sh
+          
+          # Create a symlink from latest to the current version
+          VERSION=${{ steps.semantic-release.outputs.new_release_version }}
+          echo "Creating 'latest' symlink for version ${VERSION}"
+          
+          # Export public GPG key
+          gpg --armor --export bot@github.com > apt-repo/public.gpg
+          
+      - name: Upload APT repository to release
+        if: steps.semantic-release.outputs.new_release_published == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: latest
+          files: |
+            apt-repo/dists/**/*
+            apt-repo/pool/**/*
+            apt-repo/public.gpg

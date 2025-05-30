@@ -28,9 +28,42 @@ Profile Switcher is a command-line tool written in Rust that launches Google Chr
 
 ## Installation
 
-### Option 1: Installing with Debian Package (Ubuntu/Debian)
+### Option 1: Installing with Quick Install Script (Ubuntu/Debian)
 
-The easiest way to install Profile Switcher on Ubuntu or Debian-based distributions is using the .deb package:
+The quickest way to install Profile Switcher on Ubuntu or Debian-based distributions:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/yoshiori/profile_switcher/main/scripts/install.sh | bash
+```
+
+This script will:
+- Download the latest release from GitHub
+- Install the package automatically using apt
+- Set up the application so it's ready to use
+
+### Option 2: Using APT Repository (Ubuntu/Debian)
+
+For a more integrated installation experience, you can use our APT repository:
+
+1. **Add the repository GPG key**:
+   ```bash
+   curl -fsSL https://github.com/yoshiori/profile_switcher/releases/download/latest/public.gpg | sudo apt-key add -
+   ```
+
+2. **Add the repository to your sources**:
+   ```bash
+   echo "deb https://github.com/yoshiori/profile_switcher/releases/download/latest/ stable main" | sudo tee /etc/apt/sources.list.d/profile-switcher.list
+   ```
+
+3. **Update and install**:
+   ```bash
+   sudo apt-get update
+   sudo apt-get install profile-switcher
+   ```
+
+### Option 3: Manual DEB Package Installation (Ubuntu/Debian)
+
+You can also install Profile Switcher by downloading and installing the DEB package manually:
 
 1.  **Download the latest .deb package** from the [GitHub Releases page](https://github.com/yoshiori/profile_switcher/releases).
 
@@ -44,10 +77,11 @@ The easiest way to install Profile Switcher on Ubuntu or Debian-based distributi
     This will:
     - Install the binary to `/usr/bin/profile_switcher`
     - Install the desktop file to `/usr/share/applications/`
+    - Install a default configuration template for new user accounts
 
     Note: When you first run the application, it will attempt to create a default configuration file at `~/.config/profile_switcher/config.toml`.
 
-### Option 2: Manual Installation
+### Option 4: Manual Installation
 
 To manually install Profile Switcher on Linux, you need to install the `.desktop` file and update the system's MIME type associations.
 
