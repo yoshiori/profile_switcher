@@ -26,6 +26,44 @@ Profile Switcher is a command-line tool written in Rust that launches Google Chr
     ```
     The executable will be located at `target/debug/profile_switcher` or `target/release/profile_switcher`.
 
+## Setting as Default Browser (Linux)
+
+To set Profile Switcher as your default web browser on Linux, you need to install the `.desktop` file and update the system's MIME type associations.
+
+1.  **Install the `.desktop` file:**
+
+    Copy the `profile_switcher.desktop` file to your local applications directory:
+    ```bash
+    mkdir -p ~/.local/share/applications/
+    cp profile_switcher.desktop ~/.local/share/applications/profile_switcher.desktop
+    ```
+    Then, update the applications database:
+    ```bash
+    update-desktop-database ~/.local/share/applications/
+    ```
+
+2.  **Set as default browser:**
+
+    You can then set Profile Switcher as the default handler for `http` and `httpss` schemes using `xdg-settings`:
+    ```bash
+    xdg-settings set default-web-browser profile_switcher.desktop
+    xdg-settings check default-web-browser profile_switcher.desktop
+    ```
+    The second command should confirm that `profile_switcher.desktop` is indeed the default.
+
+    Alternatively, you might be able to set this through your desktop environment's system settings (e.g., GNOME Control Center, KDE System Settings). Look for "Default Applications" or similar.
+
+3.  **Build and Install `profile_switcher`:**
+
+    Ensure that the `profile_switcher` executable is built and placed in a directory included in your system's `PATH` (e.g., `~/.local/bin/` or `/usr/local/bin/`).
+    ```bash
+    cargo build --release
+    # Example:
+    # cp target/release/profile_switcher ~/.local/bin/
+    ```
+
+Now, when you click a link in most applications, it should open with Profile Switcher.
+
 ## Configuration
 
 Create a `config.toml` file. The application will look for this file in the following locations, in order:
