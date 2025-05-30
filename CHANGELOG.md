@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/yoshiori/profile_switcher/compare/v1.0.1...v1.0.2) (2025-05-30)
+
+
+### Bug Fixes
+
+* add required url_patterns field to default profile in config template ([239181e](https://github.com/yoshiori/profile_switcher/commit/239181e1f5bb06af6774094dea8b200865549d2a))
+
 ## [1.0.1](https://github.com/yoshiori/profile_switcher/compare/v1.0.0...v1.0.1) (2025-05-30)
 
 

@@ -369,7 +369,7 @@ dependencies = [
 
 [[package]]
 name = "profile_switcher"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "anyhow",
  "clap",
