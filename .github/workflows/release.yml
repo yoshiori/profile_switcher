@@ -1,16 +1,18 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main # Or your default branch
+  workflow_run:
+    workflows: ["CI"]
+    branches: [main]
+    types:
+      - completed
 
 jobs:
   release:
     name: Semantic Release
     runs-on: ubuntu-latest
-    # Skip running on forks
-    if: github.repository_owner == 'yoshiori' # Replace with your GitHub username/org
+    # Skip running on forks and ensure CI workflow succeeded
+    if: github.repository_owner == 'yoshiori' && github.event.workflow_run.conclusion == 'success' # Replace with your GitHub username/org
     permissions:
       contents: write # to be able to publish a GitHub release
       issues: write # to be able to comment on released issues/PRs
@@ -62,7 +64,7 @@ jobs:
           if git rev-parse -q --verify "refs/tags/v1.0.0" >/dev/null; then
             echo "Tag v1.0.0 already exists. Will be handled by semantic-release."
           fi
-      
+
       - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -105,4 +107,3 @@ jobs:
             apt-repo/dists/**/*
             apt-repo/pool/**/*
             apt-repo/public.gpg
-
