@@ -91,19 +91,27 @@ jobs:
           echo "Setting up APT repository"
           ./scripts/setup-repository.sh
 
-          # Create a symlink from latest to the current version
+          # Get version and create public gpg key file
           VERSION=${{ steps.semantic-release.outputs.new_release_version }}
-          echo "Creating 'latest' symlink for version ${VERSION}"
+          echo "Processing release version: ${VERSION}"
 
-          # Export public GPG key
-          gpg --armor --export bot@github.com > apt-repo/public.gpg
+          # Export public GPG key to a separate file for direct download
+          gpg --armor --export bot@github.com > release_assets/public.gpg
 
-      - name: Upload APT repository to release
+      - name: Upload release assets
         if: steps.semantic-release.outputs.new_release_published == 'true'
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: latest
+          tag_name: v${{ steps.semantic-release.outputs.new_release_version }}
           files: |
-            apt-repo/dists/**/*
-            apt-repo/pool/**/*
-            apt-repo/public.gpg
+            release_assets/*.deb
+            release_assets/profile_switcher*
+            release_assets/public.gpg
+            
+      - name: Create or update latest tag
+        if: steps.semantic-release.outputs.new_release_published == 'true'
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git tag -f latest v${{ steps.semantic-release.outputs.new_release_version }}
+          git push -f origin latest

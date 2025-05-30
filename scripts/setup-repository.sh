@@ -65,16 +65,16 @@ cat > README.repository << EOF
 
 To install Profile Switcher from this APT repository:
 
-## 1. Download and add the GPG key:
+## Quick Install Method:
 
 \`\`\`bash
-curl -fsSL https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/latest/public.gpg | sudo apt-key add -
+curl -fsSL https://raw.githubusercontent.com/$REPO_OWNER/$REPO_NAME/main/scripts/install.sh | bash
 \`\`\`
 
 ## 2. Add the repository:
 
 \`\`\`bash
-echo "deb https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/latest/ stable main" | sudo tee /etc/apt/sources.list.d/profile-switcher.list
+echo "# This repository is handled by the install.sh script" | sudo tee /etc/apt/sources.list.d/profile-switcher.list
 \`\`\`
 
 ## 3. Update and install:
