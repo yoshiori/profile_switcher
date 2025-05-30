@@ -1,20 +1,48 @@
-default_profile = "Default"
-# Optional: Specify the full path to your Chrome/Chromium executable
-# chrome_path = "/usr/bin/google-chrome-stable" # Linux example
-# chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" # Windows example
-# chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" # macOS example
+#================================================
+# GLOBAL SETTINGS
+#================================================
 
-[[profiles]]
-name = "Default" # This name should match default_profile if you want it to be the actual default
-profile_directory = "Default"
-url_patterns = [] # Empty array makes this a fallback if no other profile matches
+# DEFAULT PROFILE
+# If no URL pattern matches, this profile will be used.
+# If not set, Chrome's built-in default ("Default") is used.
+# default_profile = "Default"  # Uncomment and change as needed
 
+# CHROME PATH
+# Specify a custom path to your Chrome executable.
+# Comment out to use auto-detection.
+#
+# Linux example:
+# chrome_path = "/usr/bin/google-chrome-stable"
+#
+# macOS example:
+# chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+#
+# Windows example:
+# chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+
+#================================================
+# PROFILE CONFIGURATIONS
+#================================================
+# Define which Chrome profile to use for which URLs
+
+# PROFILE DIRECTORY TIPS:
+# - Find your profile directories at:
+#   Linux: ~/.config/google-chrome/
+#   macOS: ~/Library/Application Support/Google/Chrome/
+#   Windows: %LOCALAPPDATA%\Google\Chrome\User Data\
+# - Common values are "Default", "Profile 1", "Profile 2", etc.
+# - Check chrome://version in Chrome to see your current Profile Path
+
+# Work profile example
 [[profiles]]
 name = "Work"
 profile_directory = "Profile 1"
-url_patterns = ["github.com", "internal.work.com"]
+url_patterns = ["github.com", "work.example.com", "jira.mycompany.net"]
 
-[[profiles]]
-name = "Personal"
-profile_directory = "Profile 2"
-url_patterns = ["youtube.com", "social.example.net"]
+# Personal profile example
+# [[profiles]]
+# name = "Shopping"
+# profile_directory = "Profile 2"
+# url_patterns = ["amazon.com", "ebay.com"]
+#
+# Add more profile mappings as needed.
