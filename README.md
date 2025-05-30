@@ -41,27 +41,7 @@ This script will:
 - Install the package automatically using apt
 - Set up the application so it's ready to use
 
-### Option 2: Using APT Repository (Ubuntu/Debian)
-
-For a more integrated installation experience, you can use our APT repository:
-
-1. **Add the repository GPG key**:
-   ```bash
-   curl -fsSL https://github.com/yoshiori/profile_switcher/releases/download/latest/public.gpg | sudo apt-key add -
-   ```
-
-2. **Add the repository to your sources**:
-   ```bash
-   echo "deb https://github.com/yoshiori/profile_switcher/releases/download/latest/ stable main" | sudo tee /etc/apt/sources.list.d/profile-switcher.list
-   ```
-
-3. **Update and install**:
-   ```bash
-   sudo apt-get update
-   sudo apt-get install profile-switcher
-   ```
-
-### Option 3: Manual DEB Package Installation (Ubuntu/Debian)
+### Option 2: Manual DEB Package Installation (Ubuntu/Debian)
 
 You can also install Profile Switcher by downloading and installing the DEB package manually:
 
@@ -81,7 +61,7 @@ You can also install Profile Switcher by downloading and installing the DEB pack
 
     Note: When you first run the application, it will attempt to create a default configuration file at `~/.config/profile_switcher/config.toml`.
 
-### Option 4: Manual Installation
+### Option 3: Manual Installation
 
 To manually install Profile Switcher on Linux, you need to install the `.desktop` file and update the system's MIME type associations.
 
