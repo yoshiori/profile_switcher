@@ -11,7 +11,7 @@ override_dh_auto_install:
 	mkdir -p debian/profile-switcher/usr/bin
 	mkdir -p debian/profile-switcher/usr/share/applications
 	mkdir -p debian/profile-switcher/usr/share/doc/profile-switcher
-	mkdir -p debian/profile-switcher/usr/share/profile-switcher
+	mkdir -p debian/profile-switcher/etc/skel/.config/profile_switcher
 
 	# Install binary
 	cp target/release/profile_switcher debian/profile-switcher/usr/bin/
@@ -19,8 +19,8 @@ override_dh_auto_install:
 	# Install desktop file
 	cp profile_switcher.desktop debian/profile-switcher/usr/share/applications/
 
-	# Install default config
-	cp config.toml debian/profile-switcher/usr/share/profile-switcher/config.toml.default
+	# Install default config for new users via /etc/skel
+	cp src/templates/config.toml debian/profile-switcher/etc/skel/.config/profile_switcher/config.toml
 
 	# Install documentation
 	cp README.md debian/profile-switcher/usr/share/doc/profile-switcher/
