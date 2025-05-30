@@ -14,10 +14,17 @@ ASSET_DIR="release_assets"
 rm -rf "$ASSET_DIR" # Clean up previous assets
 mkdir -p "$ASSET_DIR"
 
+echo "Cleaning any previous build artifacts..."
+rm -rf debian/.debhelper/ debian/files debian/*.log debian/*.substvars debian/profile-switcher/ debian/debhelper-build-stamp
+
 # Build for Linux x86_64 only
 TARGET="x86_64-unknown-linux-gnu"
 echo "Building for $TARGET..."
 cargo build --release --target "$TARGET"
+
+# Build .deb package
+echo "Building .deb package..."
+./scripts/build-deb-package.sh "$RELEASE_VERSION"
 
 BINARY_NAME="profile_switcher"
 # Construct asset name including version and target

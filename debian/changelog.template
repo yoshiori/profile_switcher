@@ -1,0 +1,5 @@
+profile-switcher (${VERSION}) unstable; urgency=medium
+
+  * Initial release.
+
+ -- Yoshiori <yoshiori@example.com>  ${DATE}

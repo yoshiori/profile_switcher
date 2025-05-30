@@ -16,5 +16,7 @@ plugins:
       message: "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
   - - "@semantic-release/github"
     - assets:
+        - path: "release_assets/*.deb"
+          label: "Debian package for Ubuntu/Debian"
         - path: "release_assets/*"
           label: "Binary release for Linux"

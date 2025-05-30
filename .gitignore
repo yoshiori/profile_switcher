@@ -1,2 +1,13 @@
 /target
 config.toml
+
+# Debian packaging files
+/debian/.debhelper/
+/debian/profile-switcher/
+/debian/files
+/debian/*.log
+/debian/*.substvars
+/debian/debhelper-build-stamp
+
+# Release assets
+/release_assets/

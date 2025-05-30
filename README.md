@@ -26,9 +26,30 @@ Profile Switcher is a command-line tool written in Rust that launches Google Chr
     ```
     The executable will be located at `target/debug/profile_switcher` or `target/release/profile_switcher`.
 
-## Setting as Default Browser (Linux)
+## Installation
 
-To set Profile Switcher as your default web browser on Linux, you need to install the `.desktop` file and update the system's MIME type associations.
+### Option 1: Installing with Debian Package (Ubuntu/Debian)
+
+The easiest way to install Profile Switcher on Ubuntu or Debian-based distributions is using the .deb package:
+
+1.  **Download the latest .deb package** from the [GitHub Releases page](https://github.com/yoshiori/profile_switcher/releases).
+
+2.  **Install the package**:
+    ```bash
+    sudo dpkg -i profile-switcher_X.Y.Z_amd64.deb
+    # If there are dependencies missing, install them with:
+    sudo apt install -f
+    ```
+
+    This will:
+    - Install the binary to `/usr/bin/profile_switcher`
+    - Install the desktop file to `/usr/share/applications/`
+
+    Note: When you first run the application, it will attempt to create a default configuration file at `~/.config/profile_switcher/config.toml`.
+
+### Option 2: Manual Installation
+
+To manually install Profile Switcher on Linux, you need to install the `.desktop` file and update the system's MIME type associations.
 
 1.  **Install the `.desktop` file:**
 
@@ -44,7 +65,7 @@ To set Profile Switcher as your default web browser on Linux, you need to instal
 
 2.  **Set as default browser:**
 
-    You can then set Profile Switcher as the default handler for `http` and `httpss` schemes using `xdg-settings`:
+    You can then set Profile Switcher as the default handler for `http` and `https` schemes using `xdg-settings`:
     ```bash
     xdg-settings set default-web-browser profile_switcher.desktop
     xdg-settings check default-web-browser profile_switcher.desktop
@@ -67,8 +88,9 @@ Now, when you click a link in most applications, it should open with Profile Swi
 ## Configuration
 
 Create a `config.toml` file. The application will look for this file in the following locations, in order:
-1.  Next to the executable.
-2.  In the project root directory (useful for development).
+1.  `~/.config/profile_switcher/config.toml` (User-specific configuration)
+2.  Next to the executable.
+3.  In the project root directory (useful for development).
 
 If the configuration file is not found, the program will print an example configuration to the console and exit.
 

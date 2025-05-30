@@ -1,0 +1,16 @@
+Source: profile-switcher
+Section: utils
+Priority: optional
+Maintainer: Yoshiori <yoshiori@example.com>
+Build-Depends: debhelper (>= 11)
+Standards-Version: 4.1.3
+Homepage: https://github.com/yoshiori/profile_switcher
+
+Package: profile-switcher
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Switches Google Chrome profiles based on URL
+ Profile Switcher is a command-line tool that launches Google Chrome
+ with a specific profile based on the URL provided as an argument.
+ The mapping between URLs and Chrome profiles is defined in a
+ config.toml file.

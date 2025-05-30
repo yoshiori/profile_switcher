@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+override_dh_auto_build:
+	# The Rust package is built using cargo
+	cargo build --release
+
+override_dh_auto_install:
+	# Create directory structure
+	mkdir -p debian/profile-switcher/usr/bin
+	mkdir -p debian/profile-switcher/usr/share/applications
+	mkdir -p debian/profile-switcher/usr/share/doc/profile-switcher
+	mkdir -p debian/profile-switcher/usr/share/profile-switcher
+
+	# Install binary
+	cp target/release/profile_switcher debian/profile-switcher/usr/bin/
+
+	# Install desktop file
+	cp profile_switcher.desktop debian/profile-switcher/usr/share/applications/
+
+	# Install default config
+	cp config.toml debian/profile-switcher/usr/share/profile-switcher/config.toml.default
+
+	# Install documentation
+	cp README.md debian/profile-switcher/usr/share/doc/profile-switcher/
+	cp LICENSE.md debian/profile-switcher/usr/share/doc/profile-switcher/
