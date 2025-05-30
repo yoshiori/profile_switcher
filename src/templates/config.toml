@@ -1,0 +1,20 @@
+default_profile = "Default"
+# Optional: Specify the full path to your Chrome/Chromium executable
+# chrome_path = "/usr/bin/google-chrome-stable" # Linux example
+# chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" # Windows example
+# chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" # macOS example
+
+[[profiles]]
+name = "Default" # This name should match default_profile if you want it to be the actual default
+profile_directory = "Default"
+# No url_patterns means it's a fallback if no other profile matches.
+
+[[profiles]]
+name = "Work"
+profile_directory = "Profile 1"
+url_patterns = ["github.com", "internal.work.com"]
+
+[[profiles]]
+name = "Personal"
+profile_directory = "Profile 2"
+url_patterns = ["youtube.com", "social.example.net"]
