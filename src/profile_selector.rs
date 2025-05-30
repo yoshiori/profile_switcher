@@ -1,3 +1,8 @@
+// Copyright (c) 2025 Yoshiori Shoji
+//
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+
 use anyhow::{Context, Result};
 use serde::Deserialize;
 use std::path::Path;
