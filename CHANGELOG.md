@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/yoshiori/profile_switcher/compare/v1.0.0...v1.0.1) (2025-05-30)
+
+
+### Bug Fixes
+
+* update release process to fix 404 error on public.gpg download ([6518c6f](https://github.com/yoshiori/profile_switcher/commit/6518c6f0be2d7f1a41b9bc2fe503a1f20cc90c27))
+
 # 1.0.0 (2025-05-30)
 
 
