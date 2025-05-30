@@ -1,0 +1,20 @@
+branches:
+  - main
+plugins:
+  - "@semantic-release/commit-analyzer"
+  - "@semantic-release/release-notes-generator"
+  - - "@semantic-release/changelog"
+    - changelogFile: "CHANGELOG.md"
+  # Plugin to update Cargo.toml and Cargo.lock, and build assets
+  - - "@semantic-release/exec"
+    - prepareCmd: "./scripts/update-cargo-version.sh ${nextRelease.version} && ./scripts/build-release-assets.sh ${nextRelease.version}"
+  - - "@semantic-release/git"
+    - assets:
+        - "Cargo.toml"
+        - "Cargo.lock"
+        - "CHANGELOG.md"
+      message: "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+  - - "@semantic-release/github"
+    - assets:
+        - path: "release_assets/*"
+          label: "Binary release for Linux"
