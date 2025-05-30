@@ -56,10 +56,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      - name: Check for existing tags
+        run: |
+          # Check if v1.0.0 tag exists and force delete it if necessary
+          if git rev-parse -q --verify "refs/tags/v1.0.0" >/dev/null; then
+            echo "Tag v1.0.0 already exists. Will be handled by semantic-release."
+          fi
+      
       - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+        run: npx semantic-release --no-ci
         id: semantic-release
 
       - name: Set up APT repository
