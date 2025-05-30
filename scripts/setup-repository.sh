@@ -88,3 +88,4 @@ EOF
 echo "Repository setup complete"
 echo "Note: You will need to upload the contents of the '$WORK_DIR' directory to your GitHub release"
 echo "Also export your public GPG key with: gpg --armor --export $GPG_KEY_EMAIL > public.gpg"
+

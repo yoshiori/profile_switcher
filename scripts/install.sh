@@ -46,3 +46,4 @@ rm "$DEB_FILE"
 
 echo "Profile Switcher has been installed successfully!"
 echo "You can now launch it by running 'profile_switcher' or using the application icon in your desktop environment."
+
