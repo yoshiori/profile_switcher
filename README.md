@@ -21,8 +21,6 @@ When you click a link in any application (email, Slack, terminal, etc.), Profile
 
 ## Installation
 
-## Installation
-
 ### Quick Install (Ubuntu/Debian)
 
 The easiest way to get started on Ubuntu or Debian-based distributions:
@@ -195,6 +193,33 @@ You're signed in with your work GitHub account!
 - Verify the desktop file is installed: `ls ~/.local/share/applications/ | grep profile_switcher`
 - Check default browser setting: `xdg-settings check default-web-browser profile_switcher.desktop`
 - Try setting again: `xdg-settings set default-web-browser profile_switcher.desktop`
+
+## Development
+
+### Building from Source
+
+If you want to contribute or build the latest version from source:
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/yoshiori/profile_switcher.git
+    cd profile_switcher
+    ```
+
+2.  **Build the project:**
+    ```bash
+    cargo build
+    ```
+    For a release build, use:
+    ```bash
+    cargo build --release
+    ```
+    The executable will be located at `target/debug/profile_switcher` or `target/release/profile_switcher`.
+
+3.  **Run directly during development:**
+    ```bash
+    cargo run -- "https://example.com"
+    ```
 
 ## Contributing
 
