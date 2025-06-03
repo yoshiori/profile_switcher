@@ -17,7 +17,7 @@ When you click a link in any application (email, Slack, terminal, etc.), Profile
 *   **Simple TOML configuration** with pattern matching
 *   **Chrome executable auto-detection** (with manual override support)
 *   **Fallback to default profile** for unmatched URLs
-*   **Cross-platform support** (Linux, macOS, Windows)
+*   **Linux support** (macOS and Windows support planned)
 
 ## Installation
 
@@ -220,6 +220,13 @@ If you want to contribute or build the latest version from source:
     ```bash
     cargo run -- "https://example.com"
     ```
+
+## Planned Features
+
+- **macOS Support**: Native support for macOS with proper Chrome detection
+- **Windows Support**: Windows compatibility with Chrome profile management
+- **Additional Browser Support**: Support for Firefox, Edge, and other browsers
+- **GUI Configuration**: Graphical interface for easier profile management
 
 ## Contributing
 
