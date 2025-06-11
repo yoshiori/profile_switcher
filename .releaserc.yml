@@ -21,10 +21,19 @@ plugins:
         - "Cargo.toml"
         - "Cargo.lock"
         - "CHANGELOG.md"
-      message: "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      message: "chore(release): ${nextRelease.version} [skip ci]
+
+${nextRelease.notes}"
   - - "@semantic-release/github"
     - assets:
         - path: "release_assets/*.deb"
-          label: "Debian package for Ubuntu/Debian"
-        - path: "release_assets/*"
-          label: "Binary release for Linux"
+        - path: "release_assets/profile_switcher-*-x86_64-unknown-linux-gnu"
+          label: "Profile Switcher v${nextRelease.version} (Linux x86_64)"
+        - path: "release_assets/profile_switcher.desktop"
+          label: "Desktop Entry File (profile_switcher.desktop)"
+        - path: "release_assets/LICENSE.md"
+          label: "LICENSE.md"
+        - path: "release_assets/README.md"
+          label: "README.md"
+        - path: "release_assets/public.gpg"
+          label: "Public GPG Key (public.gpg)"
