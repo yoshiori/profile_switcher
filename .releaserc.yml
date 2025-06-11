@@ -27,7 +27,6 @@ ${nextRelease.notes}"
   - - "@semantic-release/github"
     - assets:
         - path: "release_assets/*.deb"
-          label: "Debian package for Ubuntu/Debian"
         - path: "release_assets/profile_switcher-*-x86_64-unknown-linux-gnu"
           label: "Profile Switcher v${nextRelease.version} (Linux x86_64)"
         - path: "release_assets/profile_switcher.desktop"
