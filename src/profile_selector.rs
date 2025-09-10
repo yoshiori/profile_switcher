@@ -57,18 +57,6 @@ pub fn find_matching_profile(config: &Config, url_str: &str) -> Result<Option<Pr
     Ok(selected_profile)
 }
 
-pub fn find_profile_directory(config: &Config, url_str: &str) -> Result<String> {
-    let matched_profile = find_matching_profile(config, url_str)?;
-    
-    Ok(matched_profile
-        .map(|p| p.profile_directory)
-        .or_else(|| config.default_profile.clone())
-        .unwrap_or_else(|| "Default".to_string())) // Fallback to Chrome's default
-}
-
-pub fn determine_chrome_executable(config: &Config) -> String {
-    determine_chrome_executable_with_profile(config, None)
-}
 
 pub fn determine_chrome_executable_with_profile(config: &Config, profile: Option<&ProfileMapping>) -> String {
     // First check if the profile has a specific Chrome path
@@ -176,18 +164,21 @@ mod tests {
     #[test]
     fn test_find_profile_work() {
         let config = create_test_config();
-        let profile = find_profile_directory(&config, "https://github.com/user/repo").unwrap();
-        assert_eq!(profile, "Profile 1");
+        let profile = find_matching_profile(&config, "https://github.com/user/repo").unwrap();
+        assert!(profile.is_some());
+        assert_eq!(profile.unwrap().profile_directory, "Profile 1");
 
-        let profile_direct_match = find_profile_directory(&config, "https://work.example.com/dashboard").unwrap();
-        assert_eq!(profile_direct_match, "Profile 1");
+        let profile_direct_match = find_matching_profile(&config, "https://work.example.com/dashboard").unwrap();
+        assert!(profile_direct_match.is_some());
+        assert_eq!(profile_direct_match.unwrap().profile_directory, "Profile 1");
     }
 
     #[test]
     fn test_find_profile_personal() {
         let config = create_test_config();
-        let profile = find_profile_directory(&config, "https://www.youtube.com/watch?v=video").unwrap();
-        assert_eq!(profile, "Profile 2");
+        let profile = find_matching_profile(&config, "https://www.youtube.com/watch?v=video").unwrap();
+        assert!(profile.is_some());
+        assert_eq!(profile.unwrap().profile_directory, "Profile 2");
     }
 
     #[test]
@@ -204,37 +195,39 @@ mod tests {
             chrome_path: None,
         });
 
-        let profile = find_profile_directory(&test_config_specific_url, "https://www.amazon.com/deals/today?ref=nav").unwrap();
-        assert_eq!(profile, "DealProfile");
+        let profile = find_matching_profile(&test_config_specific_url, "https://www.amazon.com/deals/today?ref=nav").unwrap();
+        assert!(profile.is_some());
+        assert_eq!(profile.unwrap().profile_directory, "DealProfile");
 
         // Check that a more general amazon.com still matches "Profile 3" from the original create_test_config()
         // if "SpecificDeal" was not present or did not match.
         let general_amazon_config = create_test_config(); // Use original config for this part of the test
-        let general_amazon_profile = find_profile_directory(&general_amazon_config, "https://www.amazon.com/gp/cart/view.html").unwrap();
-        assert_eq!(general_amazon_profile, "Profile 3");
+        let general_amazon_profile = find_matching_profile(&general_amazon_config, "https://www.amazon.com/gp/cart/view.html").unwrap();
+        assert!(general_amazon_profile.is_some());
+        assert_eq!(general_amazon_profile.unwrap().profile_directory, "Profile 3");
     }
 
 
     #[test]
     fn test_find_profile_default() {
         let config = create_test_config();
-        let profile = find_profile_directory(&config, "https://unknownsite.com").unwrap();
-        assert_eq!(profile, "DefaultProfile");
+        let profile = find_matching_profile(&config, "https://unknownsite.com").unwrap();
+        assert!(profile.is_none());
     }
 
     #[test]
     fn test_find_profile_no_default_in_config() {
         let mut config = create_test_config();
         config.default_profile = None;
-        let profile = find_profile_directory(&config, "https://anotherunknown.org").unwrap();
-        assert_eq!(profile, "Default"); // Hardcoded fallback
+        let profile = find_matching_profile(&config, "https://anotherunknown.org").unwrap();
+        assert!(profile.is_none());
     }
 
     #[test]
     fn test_determine_chrome_executable_from_config() {
         let mut config = create_test_config();
         config.chrome_path = Some("/custom/path/to/chrome".to_string());
-        assert_eq!(determine_chrome_executable(&config), "/custom/path/to/chrome");
+        assert_eq!(determine_chrome_executable_with_profile(&config, None), "/custom/path/to/chrome");
     }
 
     // Note: Testing the OS-dependent path existence for determine_chrome_executable
