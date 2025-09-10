@@ -33,16 +33,27 @@
 # - Common values are "Default", "Profile 1", "Profile 2", etc.
 # - Check chrome://version in Chrome to see your current Profile Path
 
-# Work profile example
+# Work profile example (using Chrome Beta)
 [[profiles]]
 name = "Work"
 profile_directory = "Profile 1"
 url_patterns = ["github.com", "work.example.com", "jira.mycompany.net"]
+# Optional: Use a specific Chrome version for this profile
+# chrome_path = "/usr/bin/google-chrome-beta"  # Linux example
+# chrome_path = "/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta"  # macOS example
 
-# Personal profile example
+# Personal profile example (using stable Chrome)
 # [[profiles]]
 # name = "Shopping"
 # profile_directory = "Profile 2"
 # url_patterns = ["amazon.com", "ebay.com"]
+# chrome_path = "/usr/bin/google-chrome-stable"  # Uses stable Chrome for shopping
+#
+# Development profile example (using Chromium)
+# [[profiles]]
+# name = "Development"
+# profile_directory = "Profile 3"
+# url_patterns = ["localhost", "127.0.0.1", "dev.local"]
+# chrome_path = "/usr/bin/chromium"  # Uses Chromium for development
 #
 # Add more profile mappings as needed.

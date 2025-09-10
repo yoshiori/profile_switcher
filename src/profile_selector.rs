@@ -13,6 +13,7 @@ pub struct ProfileMapping {
     pub name: String,
     pub profile_directory: String,
     pub url_patterns: Vec<String>,
+    pub chrome_path: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -27,18 +28,18 @@ pub fn parse_config(config_str: &str) -> Result<Config> {
     toml::from_str(config_str).with_context(|| "Failed to parse TOML config string")
 }
 
-pub fn find_profile_directory(config: &Config, url_str: &str) -> Result<String> {
+pub fn find_matching_profile(config: &Config, url_str: &str) -> Result<Option<ProfileMapping>> {
     let parsed_url =
         Url::parse(url_str).with_context(|| format!("Failed to parse URL: {}", url_str))?;
     let host = parsed_url.host_str().unwrap_or_default();
 
-    let mut selected_profile_dir_name: Option<String> = None;
+    let mut selected_profile: Option<ProfileMapping> = None;
     let mut longest_match_len = 0;
 
     for mapping in &config.profiles {
         for pattern in &mapping.url_patterns {
             if (host.contains(pattern) || url_str.contains(pattern)) && pattern.len() > longest_match_len {
-                selected_profile_dir_name = Some(mapping.profile_directory.clone());
+                selected_profile = Some(mapping.clone());
                 longest_match_len = pattern.len();
                 println!(
                     "Matched profile: {} (directory: {}) with pattern '{}' (len: {}) for URL: {}",
@@ -53,18 +54,39 @@ pub fn find_profile_directory(config: &Config, url_str: &str) -> Result<String> 
         }
     }
 
-    Ok(selected_profile_dir_name
+    Ok(selected_profile)
+}
+
+pub fn find_profile_directory(config: &Config, url_str: &str) -> Result<String> {
+    let matched_profile = find_matching_profile(config, url_str)?;
+    
+    Ok(matched_profile
+        .map(|p| p.profile_directory)
         .or_else(|| config.default_profile.clone())
         .unwrap_or_else(|| "Default".to_string())) // Fallback to Chrome's default
 }
 
 pub fn determine_chrome_executable(config: &Config) -> String {
+    determine_chrome_executable_with_profile(config, None)
+}
+
+pub fn determine_chrome_executable_with_profile(config: &Config, profile: Option<&ProfileMapping>) -> String {
+    // First check if the profile has a specific Chrome path
+    if let Some(prof) = profile {
+        if let Some(chrome_path) = &prof.chrome_path {
+            return chrome_path.clone();
+        }
+    }
+    
+    // Fall back to global config chrome_path
     config.chrome_path.clone().unwrap_or_else(|| {
         // Common paths for Chrome/Chromium on Linux
         if Path::new("/usr/bin/google-chrome-stable").exists() {
             "/usr/bin/google-chrome-stable".to_string()
         } else if Path::new("/usr/bin/google-chrome").exists() {
             "/usr/bin/google-chrome".to_string()
+        } else if Path::new("/usr/bin/google-chrome-beta").exists() {
+            "/usr/bin/google-chrome-beta".to_string()
         } else if Path::new("/usr/bin/chromium-browser").exists() {
             "/usr/bin/chromium-browser".to_string()
         } else if Path::new("/usr/bin/chromium").exists() {
@@ -73,6 +95,8 @@ pub fn determine_chrome_executable(config: &Config) -> String {
         // macOS specific path
         else if Path::new("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome").exists() {
             "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome".to_string()
+        } else if Path::new("/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta").exists() {
+            "/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta".to_string()
         }
         // Add Windows paths if necessary, though direct execution might differ.
         // else if Path::new("C:\Program Files\Google\Chrome\Application\chrome.exe").exists() {
@@ -100,16 +124,19 @@ mod tests {
                     name: "Work".to_string(),
                     profile_directory: "Profile 1".to_string(),
                     url_patterns: vec!["github.com".to_string(), "work.example.com".to_string()],
+                    chrome_path: None,
                 },
                 ProfileMapping {
                     name: "Personal".to_string(),
                     profile_directory: "Profile 2".to_string(),
                     url_patterns: vec!["youtube.com".to_string(), "personal.blog".to_string()],
+                    chrome_path: None,
                 },
                 ProfileMapping {
                     name: "Shopping".to_string(),
                     profile_directory: "Profile 3".to_string(),
                     url_patterns: vec!["amazon.com".to_string()],
+                    chrome_path: None,
                 },
             ],
             chrome_path: None, // Test default path detection or provide one
@@ -174,6 +201,7 @@ mod tests {
             name: "SpecificDeal".to_string(),
             profile_directory: "DealProfile".to_string(),
             url_patterns: vec!["amazon.com/deals/today".to_string()],
+            chrome_path: None,
         });
 
         let profile = find_profile_directory(&test_config_specific_url, "https://www.amazon.com/deals/today?ref=nav").unwrap();
@@ -213,4 +241,44 @@ mod tests {
     // is harder in unit tests without mocking the filesystem.
     // These tests primarily cover the logic when chrome_path is or isn't in config.
     // For real path detection, integration tests or manual testing on target OS are better.
+
+    #[test]
+    fn test_profile_specific_chrome_path() {
+        let mut config = create_test_config();
+        config.profiles[0].chrome_path = Some("/usr/bin/google-chrome-beta".to_string());
+        config.profiles[1].chrome_path = Some("/usr/bin/google-chrome-stable".to_string());
+        
+        let work_profile = find_matching_profile(&config, "https://github.com/user/repo").unwrap();
+        assert!(work_profile.is_some());
+        let work_chrome = determine_chrome_executable_with_profile(&config, work_profile.as_ref());
+        assert_eq!(work_chrome, "/usr/bin/google-chrome-beta");
+        
+        let personal_profile = find_matching_profile(&config, "https://youtube.com/watch").unwrap();
+        assert!(personal_profile.is_some());
+        let personal_chrome = determine_chrome_executable_with_profile(&config, personal_profile.as_ref());
+        assert_eq!(personal_chrome, "/usr/bin/google-chrome-stable");
+        
+        let shopping_profile = find_matching_profile(&config, "https://amazon.com").unwrap();
+        assert!(shopping_profile.is_some());
+        let shopping_chrome = determine_chrome_executable_with_profile(&config, shopping_profile.as_ref());
+        // Should fall back to default detection since Shopping profile has no chrome_path
+        assert!(!shopping_chrome.is_empty());
+    }
+
+    #[test]
+    fn test_chrome_path_priority() {
+        let mut config = create_test_config();
+        config.chrome_path = Some("/usr/bin/global-chrome".to_string());
+        config.profiles[0].chrome_path = Some("/usr/bin/profile-chrome".to_string());
+        
+        let work_profile = find_matching_profile(&config, "https://github.com/user/repo").unwrap();
+        let chrome = determine_chrome_executable_with_profile(&config, work_profile.as_ref());
+        // Profile-specific chrome_path should take precedence
+        assert_eq!(chrome, "/usr/bin/profile-chrome");
+        
+        let personal_profile = find_matching_profile(&config, "https://youtube.com/watch").unwrap();
+        let chrome = determine_chrome_executable_with_profile(&config, personal_profile.as_ref());
+        // Should use global chrome_path when profile doesn't have one
+        assert_eq!(chrome, "/usr/bin/global-chrome");
+    }
 }
