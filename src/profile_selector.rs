@@ -25,7 +25,28 @@ pub struct Config {
 }
 
 pub fn parse_config(config_str: &str) -> Result<Config> {
-    toml::from_str(config_str).with_context(|| "Failed to parse TOML config string")
+    let config: Config = toml::from_str(config_str).with_context(|| "Failed to parse TOML config string")?;
+    validate_config(&config)?;
+    Ok(config)
+}
+
+fn find_profile_by_name<'a>(profiles: &'a [ProfileMapping], name: &str) -> Option<&'a ProfileMapping> {
+    profiles.iter().find(|p| p.name == name)
+}
+
+pub fn validate_config(config: &Config) -> Result<()> {
+    // Check if default_profile exists in profiles
+    if let Some(default_name) = &config.default_profile {
+        if let Some(profile) = find_profile_by_name(&config.profiles, default_name) {
+            // Warn if default profile has URL patterns (should be empty for fallback)
+            if !profile.url_patterns.is_empty() {
+                eprintln!("Warning: Default profile '{}' has URL patterns. Default profiles should have empty url_patterns as they serve as fallback for unmatched URLs.", default_name);
+            }
+        } else {
+            return Err(anyhow::anyhow!("Default profile '{}' not found in profiles configuration", default_name));
+        }
+    }
+    Ok(())
 }
 
 pub fn find_matching_profile(config: &Config, url_str: &str) -> Result<Option<ProfileMapping>> {
@@ -57,6 +78,29 @@ pub fn find_matching_profile(config: &Config, url_str: &str) -> Result<Option<Pr
     Ok(selected_profile)
 }
 
+
+pub fn resolve_profile_and_executable(config: &Config, url: &str) -> Result<(String, String)> {
+    if let Some(profile) = find_matching_profile(config, url)? {
+        // Matched by URL pattern
+        let executable = determine_chrome_executable_with_profile(config, Some(&profile));
+        Ok((profile.profile_directory, executable))
+    } else if let Some(default_name) = &config.default_profile {
+        // No match, try default profile
+        let default_profile = find_profile_by_name(&config.profiles, default_name)
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "Default profile '{}' not found, but was specified in config. This should have been caught by validation.",
+                    default_name
+                )
+            })?;
+        let executable = determine_chrome_executable_with_profile(config, Some(default_profile));
+        Ok((default_profile.profile_directory.clone(), executable))
+    } else {
+        // No match and no default, fallback
+        let executable = determine_chrome_executable_with_profile(config, None);
+        Ok(("Default".to_string(), executable))
+    }
+}
 
 pub fn determine_chrome_executable_with_profile(config: &Config, profile: Option<&ProfileMapping>) -> String {
     // First check if the profile has a specific Chrome path
@@ -146,11 +190,16 @@ mod tests {
             name = "Personal"
             profile_directory = "PersonalProfile"
             url_patterns = ["personal.com"]
+
+            [[profiles]]
+            name = "Default"
+            profile_directory = "DefaultProfile"
+            url_patterns = []
         "#;
         let config = parse_config(config_content).unwrap();
         assert_eq!(config.default_profile, Some("Default".to_string()));
         assert_eq!(config.chrome_path, Some("/usr/bin/custom-chrome".to_string()));
-        assert_eq!(config.profiles.len(), 2);
+        assert_eq!(config.profiles.len(), 3);
         assert_eq!(config.profiles[0].name, "Work");
         assert_eq!(config.profiles[0].profile_directory, "WorkProfile");
     }
@@ -273,5 +322,95 @@ mod tests {
         let chrome = determine_chrome_executable_with_profile(&config, personal_profile.as_ref());
         // Should use global chrome_path when profile doesn't have one
         assert_eq!(chrome, "/usr/bin/global-chrome");
+    }
+
+    #[test]
+    fn test_validate_config_default_profile_exists() {
+        let config = Config {
+            default_profile: Some("NonExistent".to_string()),
+            profiles: vec![
+                ProfileMapping {
+                    name: "Work".to_string(),
+                    profile_directory: "Profile 1".to_string(),
+                    url_patterns: vec!["work.com".to_string()],
+                    chrome_path: None,
+                }
+            ],
+            chrome_path: None,
+        };
+        
+        let result = validate_config(&config);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Default profile 'NonExistent' not found"));
+    }
+
+    #[test]
+    fn test_resolve_profile_and_executable_default() {
+        let config_content = r#"
+            default_profile = "Personal"
+            
+            [[profiles]]
+            name = "Work"
+            profile_directory = "Profile 1"
+            url_patterns = ["work.com"]
+            chrome_path = "/usr/bin/google-chrome"
+            
+            [[profiles]]
+            name = "Personal"
+            profile_directory = "Default"
+            chrome_path = "/usr/bin/vivaldi"
+            url_patterns = []
+        "#;
+        
+        let config = parse_config(config_content).unwrap();
+        
+        // URL that matches Work profile
+        let (profile_dir, executable) = resolve_profile_and_executable(&config, "https://work.com").unwrap();
+        assert_eq!(profile_dir, "Profile 1");
+        assert_eq!(executable, "/usr/bin/google-chrome");
+        
+        // URL that doesn't match - should use default profile (Personal)
+        let (profile_dir, executable) = resolve_profile_and_executable(&config, "https://google.com").unwrap();
+        assert_eq!(profile_dir, "Default");
+        assert_eq!(executable, "/usr/bin/vivaldi");
+    }
+
+    #[test]
+    fn test_resolve_profile_and_executable_no_default() {
+        let config_content = r#"
+            [[profiles]]
+            name = "Work"
+            profile_directory = "Profile 1"
+            url_patterns = ["work.com"]
+            chrome_path = "/usr/bin/google-chrome"
+        "#;
+        
+        let config = parse_config(config_content).unwrap();
+        
+        // URL that doesn't match and no default_profile - should use fallback
+        let (profile_dir, executable) = resolve_profile_and_executable(&config, "https://google.com").unwrap();
+        assert_eq!(profile_dir, "Default");
+        // executable will be auto-detected Chrome path (varies by system)
+        assert!(!executable.is_empty());
+    }
+
+    #[test]
+    fn test_validate_config_default_profile_with_patterns() {
+        let config = Config {
+            default_profile: Some("Personal".to_string()),
+            profiles: vec![
+                ProfileMapping {
+                    name: "Personal".to_string(),
+                    profile_directory: "Default".to_string(),
+                    url_patterns: vec!["personal.com".to_string()], // Should warn
+                    chrome_path: Some("/usr/bin/vivaldi".to_string()),
+                }
+            ],
+            chrome_path: None,
+        };
+        
+        // Should succeed but produce warning
+        let result = validate_config(&config);
+        assert!(result.is_ok());
     }
 }
