@@ -25,7 +25,28 @@ pub struct Config {
 }
 
 pub fn parse_config(config_str: &str) -> Result<Config> {
-    toml::from_str(config_str).with_context(|| "Failed to parse TOML config string")
+    let config: Config = toml::from_str(config_str).with_context(|| "Failed to parse TOML config string")?;
+    validate_config(&config)?;
+    Ok(config)
+}
+
+pub fn validate_config(config: &Config) -> Result<()> {
+    // Check if default_profile exists in profiles
+    if let Some(default_name) = &config.default_profile {
+        let default_profile = config.profiles.iter().find(|p| &p.name == default_name);
+        match default_profile {
+            Some(profile) => {
+                // Warn if default profile has URL patterns (should be empty for fallback)
+                if !profile.url_patterns.is_empty() {
+                    eprintln!("Warning: Default profile '{}' has URL patterns. Default profiles should have empty url_patterns as they serve as fallback for unmatched URLs.", default_name);
+                }
+            }
+            None => {
+                return Err(anyhow::anyhow!("Default profile '{}' not found in profiles configuration", default_name));
+            }
+        }
+    }
+    Ok(())
 }
 
 pub fn find_matching_profile(config: &Config, url_str: &str) -> Result<Option<ProfileMapping>> {
@@ -146,11 +167,16 @@ mod tests {
             name = "Personal"
             profile_directory = "PersonalProfile"
             url_patterns = ["personal.com"]
+
+            [[profiles]]
+            name = "Default"
+            profile_directory = "DefaultProfile"
+            url_patterns = []
         "#;
         let config = parse_config(config_content).unwrap();
         assert_eq!(config.default_profile, Some("Default".to_string()));
         assert_eq!(config.chrome_path, Some("/usr/bin/custom-chrome".to_string()));
-        assert_eq!(config.profiles.len(), 2);
+        assert_eq!(config.profiles.len(), 3);
         assert_eq!(config.profiles[0].name, "Work");
         assert_eq!(config.profiles[0].profile_directory, "WorkProfile");
     }
@@ -273,5 +299,79 @@ mod tests {
         let chrome = determine_chrome_executable_with_profile(&config, personal_profile.as_ref());
         // Should use global chrome_path when profile doesn't have one
         assert_eq!(chrome, "/usr/bin/global-chrome");
+    }
+
+    #[test]
+    fn test_default_profile_functionality() {
+        let config_content = r#"
+            default_profile = "Personal"
+            
+            [[profiles]]
+            name = "Work"
+            profile_directory = "Profile 1"
+            url_patterns = ["work.com"]
+            
+            [[profiles]]
+            name = "Personal"
+            profile_directory = "Default"
+            chrome_path = "/usr/bin/vivaldi"
+            url_patterns = []
+        "#;
+        
+        let config = parse_config(config_content).unwrap();
+        
+        // URL that matches Work profile
+        let work_match = find_matching_profile(&config, "https://work.com").unwrap();
+        assert!(work_match.is_some());
+        assert_eq!(work_match.unwrap().name, "Work");
+        
+        // URL that doesn't match any pattern - should use default_profile logic
+        let no_match = find_matching_profile(&config, "https://google.com").unwrap();
+        assert!(no_match.is_none());
+        
+        // Verify default profile exists
+        let default_profile = config.profiles.iter().find(|p| p.name == "Personal");
+        assert!(default_profile.is_some());
+        assert_eq!(default_profile.unwrap().chrome_path, Some("/usr/bin/vivaldi".to_string()));
+    }
+
+    #[test]
+    fn test_validate_config_default_profile_exists() {
+        let config = Config {
+            default_profile: Some("NonExistent".to_string()),
+            profiles: vec![
+                ProfileMapping {
+                    name: "Work".to_string(),
+                    profile_directory: "Profile 1".to_string(),
+                    url_patterns: vec!["work.com".to_string()],
+                    chrome_path: None,
+                }
+            ],
+            chrome_path: None,
+        };
+        
+        let result = validate_config(&config);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Default profile 'NonExistent' not found"));
+    }
+
+    #[test]
+    fn test_validate_config_default_profile_with_patterns() {
+        let config = Config {
+            default_profile: Some("Personal".to_string()),
+            profiles: vec![
+                ProfileMapping {
+                    name: "Personal".to_string(),
+                    profile_directory: "Default".to_string(),
+                    url_patterns: vec!["personal.com".to_string()], // Should warn
+                    chrome_path: Some("/usr/bin/vivaldi".to_string()),
+                }
+            ],
+            chrome_path: None,
+        };
+        
+        // Should succeed but produce warning
+        let result = validate_config(&config);
+        assert!(result.is_ok());
     }
 }

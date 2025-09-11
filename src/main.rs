@@ -44,13 +44,25 @@ fn main() -> Result<()> {
     let config: Config = parse_config(&config_str)?;
 
     let matched_profile = find_matching_profile(&config, &args.url)?;
-    let profile_to_use = matched_profile
-        .as_ref()
-        .map(|p| p.profile_directory.clone())
-        .or_else(|| config.default_profile.clone())
-        .unwrap_or_else(|| "Default".to_string());
-
-    let chrome_executable = determine_chrome_executable_with_profile(&config, matched_profile.as_ref());
+    
+    // Determine profile and chrome executable
+    let (profile_to_use, chrome_executable) = if let Some(profile) = &matched_profile {
+        // URL matched a specific profile
+        (profile.profile_directory.clone(), determine_chrome_executable_with_profile(&config, Some(profile)))
+    } else if let Some(default_profile_name) = &config.default_profile {
+        // No match, use default profile
+        let default_profile = config.profiles.iter().find(|p| &p.name == default_profile_name);
+        match default_profile {
+            Some(profile) => (profile.profile_directory.clone(), determine_chrome_executable_with_profile(&config, Some(profile))),
+            None => {
+                eprintln!("Warning: Default profile '{}' not found in configuration. Using fallback.", default_profile_name);
+                ("Default".to_string(), determine_chrome_executable_with_profile(&config, None))
+            }
+        }
+    } else {
+        // No match and no default profile configured
+        ("Default".to_string(), determine_chrome_executable_with_profile(&config, None))
+    };
 
     let mut command = Command::new(chrome_executable);
     command.arg(format!("--profile-directory={}", profile_to_use));
