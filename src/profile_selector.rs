@@ -82,9 +82,10 @@ pub fn find_matching_profile(config: &Config, url_str: &str) -> Result<Option<Pr
 pub fn resolve_profile_and_executable(config: &Config, url: &str) -> Result<(String, String)> {
     // First, try to find a profile matching the URL pattern.
     if let Some(profile) = find_matching_profile(config, url)? {
+        let chrome_executable = determine_chrome_executable_with_profile(config, Some(&profile));
         return Ok((
-            profile.profile_directory.clone(),
-            determine_chrome_executable_with_profile(config, Some(&profile)),
+            profile.profile_directory,
+            chrome_executable,
         ));
     }
 
