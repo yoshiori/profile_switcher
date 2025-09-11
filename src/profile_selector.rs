@@ -76,26 +76,37 @@ pub fn find_matching_profile(config: &Config, url_str: &str) -> Result<Option<Pr
 
 
 pub fn resolve_profile_and_executable(config: &Config, url: &str) -> Result<(String, String)> {
-    let matched_profile = find_matching_profile(config, url)?;
-    
-    let (profile_to_use, chrome_executable) = {
-        let effective_profile = matched_profile.as_ref().or_else(|| {
-            config.default_profile.as_ref().map(|name| {
-                config.profiles
-                    .iter()
-                    .find(|p| &p.name == name)
-                    .expect("Default profile not found, but validation should have prevented this.")
-            })
-        });
+    // First, try to find a profile matching the URL pattern.
+    if let Some(profile) = find_matching_profile(config, url)? {
+        return Ok((
+            profile.profile_directory.clone(),
+            determine_chrome_executable_with_profile(config, Some(&profile)),
+        ));
+    }
 
-        if let Some(profile) = effective_profile {
-            (profile.profile_directory.clone(), determine_chrome_executable_with_profile(config, Some(profile)))
-        } else {
-            ("Default".to_string(), determine_chrome_executable_with_profile(config, None))
-        }
-    };
-    
-    Ok((profile_to_use, chrome_executable))
+    // If no match, try to use the default profile.
+    if let Some(default_name) = &config.default_profile {
+        let default_profile = config
+            .profiles
+            .iter()
+            .find(|p| &p.name == default_name)
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "Default profile '{}' not found, but was specified in config. This should have been caught by validation.",
+                    default_name
+                )
+            })?;
+        return Ok((
+            default_profile.profile_directory.clone(),
+            determine_chrome_executable_with_profile(config, Some(default_profile)),
+        ));
+    }
+
+    // Finally, fall back to the hardcoded "Default" profile and auto-detected browser.
+    Ok((
+        "Default".to_string(),
+        determine_chrome_executable_with_profile(config, None),
+    ))
 }
 
 pub fn determine_chrome_executable_with_profile(config: &Config, profile: Option<&ProfileMapping>) -> String {
