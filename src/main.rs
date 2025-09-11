@@ -9,7 +9,7 @@ use std::fs;
 use std::process::Command;
 
 mod profile_selector;
-use profile_selector::{determine_chrome_executable, find_profile_directory, parse_config, Config};
+use profile_selector::{determine_chrome_executable_with_profile, find_matching_profile, parse_config, Config};
 
 mod config_handler;
 use config_handler::{determine_config_file_path, create_default_config_if_possible, print_config_not_found_error_and_example};
@@ -43,9 +43,14 @@ fn main() -> Result<()> {
         .with_context(|| format!("Failed to read config file from {:?}", config_path))?;
     let config: Config = parse_config(&config_str)?;
 
-    let profile_to_use = find_profile_directory(&config, &args.url)?;
+    let matched_profile = find_matching_profile(&config, &args.url)?;
+    let profile_to_use = matched_profile
+        .as_ref()
+        .map(|p| p.profile_directory.clone())
+        .or_else(|| config.default_profile.clone())
+        .unwrap_or_else(|| "Default".to_string());
 
-    let chrome_executable = determine_chrome_executable(&config);
+    let chrome_executable = determine_chrome_executable_with_profile(&config, matched_profile.as_ref());
 
     let mut command = Command::new(chrome_executable);
     command.arg(format!("--profile-directory={}", profile_to_use));

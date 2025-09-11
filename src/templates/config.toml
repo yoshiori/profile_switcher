@@ -7,18 +7,23 @@
 # If not set, Chrome's built-in default ("Default") is used.
 # default_profile = "Default"  # Uncomment and change as needed
 
-# CHROME PATH
-# Specify a custom path to your Chrome executable.
-# Comment out to use auto-detection.
+# CHROME/BROWSER PATH
+# Specify a custom path to your browser executable.
+# Comment out to use auto-detection (Chrome/Chromium only).
+# Note: Vivaldi requires explicit path specification.
 #
-# Linux example:
+# Chrome Linux example:
 # chrome_path = "/usr/bin/google-chrome-stable"
 #
-# macOS example:
+# Chrome macOS example:
 # chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 #
-# Windows example:
+# Chrome Windows example:
 # chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+#
+# Vivaldi examples (requires explicit path):
+# chrome_path = "/usr/bin/vivaldi"  # Linux
+# chrome_path = "/Applications/Vivaldi.app/Contents/MacOS/Vivaldi"  # macOS
 
 #================================================
 # PROFILE CONFIGURATIONS
@@ -27,22 +32,44 @@
 
 # PROFILE DIRECTORY TIPS:
 # - Find your profile directories at:
-#   Linux: ~/.config/google-chrome/
-#   macOS: ~/Library/Application Support/Google/Chrome/
-#   Windows: %LOCALAPPDATA%\Google\Chrome\User Data\
+#   Chrome - Linux: ~/.config/google-chrome/
+#   Chrome - macOS: ~/Library/Application Support/Google/Chrome/
+#   Chrome - Windows: %LOCALAPPDATA%\Google\Chrome\User Data\
+#   Vivaldi - Linux: ~/.config/vivaldi/
+#   Vivaldi - macOS: ~/Library/Application Support/Vivaldi/
+#   Vivaldi - Windows: %LOCALAPPDATA%\Vivaldi\User Data\
 # - Common values are "Default", "Profile 1", "Profile 2", etc.
-# - Check chrome://version in Chrome to see your current Profile Path
+# - Check chrome://version (or vivaldi://version) to see your current Profile Path
 
-# Work profile example
+# Work profile example (using Chrome Beta)
 [[profiles]]
 name = "Work"
 profile_directory = "Profile 1"
 url_patterns = ["github.com", "work.example.com", "jira.mycompany.net"]
+# Optional: Use a specific Chrome version for this profile
+# chrome_path = "/usr/bin/google-chrome-beta"  # Linux example
+# chrome_path = "/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta"  # macOS example
 
-# Personal profile example
+# Personal profile example (using stable Chrome)
 # [[profiles]]
 # name = "Shopping"
 # profile_directory = "Profile 2"
 # url_patterns = ["amazon.com", "ebay.com"]
+# chrome_path = "/usr/bin/google-chrome-stable"  # Uses stable Chrome for shopping
+#
+# Development profile example (using Chromium)
+# [[profiles]]
+# name = "Development"
+# profile_directory = "Profile 3"
+# url_patterns = ["localhost", "127.0.0.1", "dev.local"]
+# chrome_path = "/usr/bin/chromium"  # Uses Chromium for development
+#
+# Vivaldi profile example (requires explicit chrome_path)
+# [[profiles]]
+# name = "Research"
+# profile_directory = "Profile 4"
+# url_patterns = ["research.com", "academic.org", "wikipedia.org"]
+# chrome_path = "/usr/bin/vivaldi"  # Linux example
+# chrome_path = "/Applications/Vivaldi.app/Contents/MacOS/Vivaldi"  # macOS example
 #
 # Add more profile mappings as needed.
