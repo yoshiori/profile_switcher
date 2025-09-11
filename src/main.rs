@@ -9,7 +9,7 @@ use std::fs;
 use std::process::Command;
 
 mod profile_selector;
-use profile_selector::{determine_chrome_executable_with_profile, find_matching_profile, parse_config, Config};
+use profile_selector::{parse_config, resolve_profile_and_executable, Config};
 
 mod config_handler;
 use config_handler::{determine_config_file_path, create_default_config_if_possible, print_config_not_found_error_and_example};
@@ -43,26 +43,7 @@ fn main() -> Result<()> {
         .with_context(|| format!("Failed to read config file from {:?}", config_path))?;
     let config: Config = parse_config(&config_str)?;
 
-    let matched_profile = find_matching_profile(&config, &args.url)?;
-    
-    // Determine profile and chrome executable
-    let (profile_to_use, chrome_executable) = if let Some(profile) = &matched_profile {
-        // URL matched a specific profile
-        (profile.profile_directory.clone(), determine_chrome_executable_with_profile(&config, Some(profile)))
-    } else if let Some(default_profile_name) = &config.default_profile {
-        // No match, use default profile
-        let default_profile = config.profiles.iter().find(|p| &p.name == default_profile_name);
-        match default_profile {
-            Some(profile) => (profile.profile_directory.clone(), determine_chrome_executable_with_profile(&config, Some(profile))),
-            None => {
-                eprintln!("Warning: Default profile '{}' not found in configuration. Using fallback.", default_profile_name);
-                ("Default".to_string(), determine_chrome_executable_with_profile(&config, None))
-            }
-        }
-    } else {
-        // No match and no default profile configured
-        ("Default".to_string(), determine_chrome_executable_with_profile(&config, None))
-    };
+    let (profile_to_use, chrome_executable) = resolve_profile_and_executable(&config, &args.url)?;
 
     let mut command = Command::new(chrome_executable);
     command.arg(format!("--profile-directory={}", profile_to_use));
