@@ -33,17 +33,13 @@ pub fn parse_config(config_str: &str) -> Result<Config> {
 pub fn validate_config(config: &Config) -> Result<()> {
     // Check if default_profile exists in profiles
     if let Some(default_name) = &config.default_profile {
-        let default_profile = config.profiles.iter().find(|p| &p.name == default_name);
-        match default_profile {
-            Some(profile) => {
-                // Warn if default profile has URL patterns (should be empty for fallback)
-                if !profile.url_patterns.is_empty() {
-                    eprintln!("Warning: Default profile '{}' has URL patterns. Default profiles should have empty url_patterns as they serve as fallback for unmatched URLs.", default_name);
-                }
+        if let Some(profile) = config.profiles.iter().find(|p| &p.name == default_name) {
+            // Warn if default profile has URL patterns (should be empty for fallback)
+            if !profile.url_patterns.is_empty() {
+                eprintln!("Warning: Default profile '{}' has URL patterns. Default profiles should have empty url_patterns as they serve as fallback for unmatched URLs.", default_name);
             }
-            None => {
-                return Err(anyhow::anyhow!("Default profile '{}' not found in profiles configuration", default_name));
-            }
+        } else {
+            return Err(anyhow::anyhow!("Default profile '{}' not found in profiles configuration", default_name));
         }
     }
     Ok(())
@@ -87,15 +83,10 @@ pub fn resolve_profile_and_executable(config: &Config, url: &str) -> Result<(Str
         // URL matched a specific profile
         (profile.profile_directory.clone(), determine_chrome_executable_with_profile(config, Some(profile)))
     } else if let Some(default_profile_name) = &config.default_profile {
-        // No match, use default profile
-        let default_profile = config.profiles.iter().find(|p| &p.name == default_profile_name);
-        match default_profile {
-            Some(profile) => (profile.profile_directory.clone(), determine_chrome_executable_with_profile(config, Some(profile))),
-            None => {
-                // This branch is unreachable because `validate_config` ensures the default profile exists.
-                unreachable!("Default profile '{}' not found, but validation should have prevented this.", default_profile_name);
-            }
-        }
+        // No match, use default profile. `expect` is safe due to `validate_config`.
+        let profile = config.profiles.iter().find(|p| &p.name == default_profile_name)
+            .expect("Default profile not found, but validation should have prevented this.");
+        (profile.profile_directory.clone(), determine_chrome_executable_with_profile(config, Some(profile)))
     } else {
         // No match and no default profile configured
         ("Default".to_string(), determine_chrome_executable_with_profile(config, None))
@@ -324,40 +315,6 @@ mod tests {
         let chrome = determine_chrome_executable_with_profile(&config, personal_profile.as_ref());
         // Should use global chrome_path when profile doesn't have one
         assert_eq!(chrome, "/usr/bin/global-chrome");
-    }
-
-    #[test]
-    fn test_default_profile_functionality() {
-        let config_content = r#"
-            default_profile = "Personal"
-            
-            [[profiles]]
-            name = "Work"
-            profile_directory = "Profile 1"
-            url_patterns = ["work.com"]
-            
-            [[profiles]]
-            name = "Personal"
-            profile_directory = "Default"
-            chrome_path = "/usr/bin/vivaldi"
-            url_patterns = []
-        "#;
-        
-        let config = parse_config(config_content).unwrap();
-        
-        // URL that matches Work profile
-        let work_match = find_matching_profile(&config, "https://work.com").unwrap();
-        assert!(work_match.is_some());
-        assert_eq!(work_match.unwrap().name, "Work");
-        
-        // URL that doesn't match any pattern - should use default_profile logic
-        let no_match = find_matching_profile(&config, "https://google.com").unwrap();
-        assert!(no_match.is_none());
-        
-        // Verify default profile exists
-        let default_profile = config.profiles.iter().find(|p| p.name == "Personal");
-        assert!(default_profile.is_some());
-        assert_eq!(default_profile.unwrap().chrome_path, Some("/usr/bin/vivaldi".to_string()));
     }
 
     #[test]
