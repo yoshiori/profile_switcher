@@ -79,15 +79,14 @@ pub fn resolve_profile_and_executable(config: &Config, url: &str) -> Result<(Str
     let matched_profile = find_matching_profile(config, url)?;
     
     let (profile_to_use, chrome_executable) = {
-        let effective_profile = if let Some(ref p) = matched_profile {
-            Some(p)
-        } else if let Some(default_profile_name) = &config.default_profile {
-            // `expect` is safe due to `validate_config` ensuring the profile exists.
-            Some(config.profiles.iter().find(|p| &p.name == default_profile_name)
-                .expect("Default profile not found, but validation should have prevented this."))
-        } else {
-            None
-        };
+        let effective_profile = matched_profile.as_ref().or_else(|| {
+            config.default_profile.as_ref().map(|name| {
+                config.profiles
+                    .iter()
+                    .find(|p| &p.name == name)
+                    .expect("Default profile not found, but validation should have prevented this.")
+            })
+        });
 
         if let Some(profile) = effective_profile {
             (profile.profile_directory.clone(), determine_chrome_executable_with_profile(config, Some(profile)))
