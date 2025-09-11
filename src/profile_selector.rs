@@ -79,12 +79,18 @@ pub fn determine_chrome_executable_with_profile(config: &Config, profile: Option
             "/usr/bin/chromium-browser".to_string()
         } else if Path::new("/usr/bin/chromium").exists() {
             "/usr/bin/chromium".to_string()
+        } else if Path::new("/usr/bin/vivaldi").exists() {
+            "/usr/bin/vivaldi".to_string()
+        } else if Path::new("/usr/bin/vivaldi-stable").exists() {
+            "/usr/bin/vivaldi-stable".to_string()
         }
         // macOS specific path
         else if Path::new("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome").exists() {
             "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome".to_string()
         } else if Path::new("/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta").exists() {
             "/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta".to_string()
+        } else if Path::new("/Applications/Vivaldi.app/Contents/MacOS/Vivaldi").exists() {
+            "/Applications/Vivaldi.app/Contents/MacOS/Vivaldi".to_string()
         }
         // Add Windows paths if necessary, though direct execution might differ.
         // else if Path::new("C:\Program Files\Google\Chrome\Application\chrome.exe").exists() {
@@ -92,6 +98,9 @@ pub fn determine_chrome_executable_with_profile(config: &Config, profile: Option
         // }
         // else if Path::new("C:\Program Files (x86)\Google\Chrome\Application\chrome.exe").exists() {
         //     "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe".to_string()
+        // }
+        // else if Path::new("C:\Program Files\Vivaldi\Application\vivaldi.exe").exists() {
+        //     "C:\Program Files\Vivaldi\Application\vivaldi.exe".to_string()
         // }
         else {
             // Fallback, user might need to specify in config.toml or ensure it's in PATH
