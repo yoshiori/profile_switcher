@@ -78,18 +78,22 @@ pub fn find_matching_profile(config: &Config, url_str: &str) -> Result<Option<Pr
 pub fn resolve_profile_and_executable(config: &Config, url: &str) -> Result<(String, String)> {
     let matched_profile = find_matching_profile(config, url)?;
     
-    // Determine profile and chrome executable
-    let (profile_to_use, chrome_executable) = if let Some(profile) = &matched_profile {
-        // URL matched a specific profile
-        (profile.profile_directory.clone(), determine_chrome_executable_with_profile(config, Some(profile)))
-    } else if let Some(default_profile_name) = &config.default_profile {
-        // No match, use default profile. `expect` is safe due to `validate_config`.
-        let profile = config.profiles.iter().find(|p| &p.name == default_profile_name)
-            .expect("Default profile not found, but validation should have prevented this.");
-        (profile.profile_directory.clone(), determine_chrome_executable_with_profile(config, Some(profile)))
-    } else {
-        // No match and no default profile configured
-        ("Default".to_string(), determine_chrome_executable_with_profile(config, None))
+    let (profile_to_use, chrome_executable) = {
+        let effective_profile = if let Some(ref p) = matched_profile {
+            Some(p)
+        } else if let Some(default_profile_name) = &config.default_profile {
+            // `expect` is safe due to `validate_config` ensuring the profile exists.
+            Some(config.profiles.iter().find(|p| &p.name == default_profile_name)
+                .expect("Default profile not found, but validation should have prevented this."))
+        } else {
+            None
+        };
+
+        if let Some(profile) = effective_profile {
+            (profile.profile_directory.clone(), determine_chrome_executable_with_profile(config, Some(profile)))
+        } else {
+            ("Default".to_string(), determine_chrome_executable_with_profile(config, None))
+        }
     };
     
     Ok((profile_to_use, chrome_executable))
