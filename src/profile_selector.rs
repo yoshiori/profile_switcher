@@ -80,17 +80,12 @@ pub fn find_matching_profile(config: &Config, url_str: &str) -> Result<Option<Pr
 
 
 pub fn resolve_profile_and_executable(config: &Config, url: &str) -> Result<(String, String)> {
-    // First, try to find a profile matching the URL pattern.
     if let Some(profile) = find_matching_profile(config, url)? {
-        let chrome_executable = determine_chrome_executable_with_profile(config, Some(&profile));
-        return Ok((
-            profile.profile_directory,
-            chrome_executable,
-        ));
-    }
-
-    // If no match, try to use the default profile.
-    if let Some(default_name) = &config.default_profile {
+        // Matched by URL pattern
+        let executable = determine_chrome_executable_with_profile(config, Some(&profile));
+        Ok((profile.profile_directory, executable))
+    } else if let Some(default_name) = &config.default_profile {
+        // No match, try default profile
         let default_profile = find_profile_by_name(&config.profiles, default_name)
             .ok_or_else(|| {
                 anyhow::anyhow!(
@@ -98,17 +93,13 @@ pub fn resolve_profile_and_executable(config: &Config, url: &str) -> Result<(Str
                     default_name
                 )
             })?;
-        return Ok((
-            default_profile.profile_directory.clone(),
-            determine_chrome_executable_with_profile(config, Some(default_profile)),
-        ));
+        let executable = determine_chrome_executable_with_profile(config, Some(default_profile));
+        Ok((default_profile.profile_directory.clone(), executable))
+    } else {
+        // No match and no default, fallback
+        let executable = determine_chrome_executable_with_profile(config, None);
+        Ok(("Default".to_string(), executable))
     }
-
-    // Finally, fall back to the hardcoded "Default" profile and auto-detected browser.
-    Ok((
-        "Default".to_string(),
-        determine_chrome_executable_with_profile(config, None),
-    ))
 }
 
 pub fn determine_chrome_executable_with_profile(config: &Config, profile: Option<&ProfileMapping>) -> String {
