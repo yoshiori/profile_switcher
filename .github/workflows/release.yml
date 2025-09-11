@@ -65,6 +65,11 @@ jobs:
             echo "Tag v1.0.0 already exists. Will be handled by semantic-release."
           fi
 
+      - name: Run tests
+        run: |
+          echo "Running tests before release..."
+          cargo test --verbose
+
       - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
