@@ -5,6 +5,13 @@
 
 * add required url_patterns field to default profile in config template ([239181e](https://github.com/yoshiori/profile_switcher/commit/239181e1f5bb06af6774094dea8b200865549d2a))
 
+## [2.0.1](https://github.com/yoshiori/profile_switcher/compare/v2.0.0...v2.0.1) (2025-09-11)
+
+
+### Bug Fixes
+
+* Properly handle default_profile when no URL patterns match ([#11](https://github.com/yoshiori/profile_switcher/issues/11)) ([fcec964](https://github.com/yoshiori/profile_switcher/commit/fcec9647b2a870812214f9719039fdde062338ca))
+
 ## [2.0.0](https://github.com/yoshiori/profile_switcher/compare/v1.0.2...v2.0.0) (2025-09-11)
 
 
