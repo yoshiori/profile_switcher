@@ -1,0 +1,69 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          release-type: rust
+          
+      # Build and upload release assets if a release was created
+      - name: Checkout
+        if: steps.release.outputs.release_created
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        if: steps.release.outputs.release_created
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Install Debian packaging tools
+        if: steps.release.outputs.release_created
+        run: sudo apt-get update && sudo apt-get install -y debhelper build-essential pkg-config
+
+      - name: Cache Cargo dependencies
+        if: steps.release.outputs.release_created
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build release assets
+        if: steps.release.outputs.release_created
+        env:
+          VERSION: ${{ steps.release.outputs.tag_name }}
+        run: |
+          # Remove 'v' prefix from version if present
+          VERSION_NO_V=${VERSION#v}
+          ./scripts/build-release-assets.sh ${VERSION_NO_V}
+
+      - name: Upload release assets
+        if: steps.release.outputs.release_created
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ steps.release.outputs.tag_name }} release_assets/*.deb
+          gh release upload ${{ steps.release.outputs.tag_name }} release_assets/profile_switcher-*-x86_64-unknown-linux-gnu
+          gh release upload ${{ steps.release.outputs.tag_name }} release_assets/profile_switcher.desktop
+          gh release upload ${{ steps.release.outputs.tag_name }} release_assets/LICENSE.md
+          gh release upload ${{ steps.release.outputs.tag_name }} release_assets/README.md
