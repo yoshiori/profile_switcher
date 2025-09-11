@@ -30,10 +30,14 @@ pub fn parse_config(config_str: &str) -> Result<Config> {
     Ok(config)
 }
 
+fn find_profile_by_name<'a>(profiles: &'a [ProfileMapping], name: &str) -> Option<&'a ProfileMapping> {
+    profiles.iter().find(|p| p.name == name)
+}
+
 pub fn validate_config(config: &Config) -> Result<()> {
     // Check if default_profile exists in profiles
     if let Some(default_name) = &config.default_profile {
-        if let Some(profile) = config.profiles.iter().find(|p| &p.name == default_name) {
+        if let Some(profile) = find_profile_by_name(&config.profiles, default_name) {
             // Warn if default profile has URL patterns (should be empty for fallback)
             if !profile.url_patterns.is_empty() {
                 eprintln!("Warning: Default profile '{}' has URL patterns. Default profiles should have empty url_patterns as they serve as fallback for unmatched URLs.", default_name);
@@ -86,10 +90,7 @@ pub fn resolve_profile_and_executable(config: &Config, url: &str) -> Result<(Str
 
     // If no match, try to use the default profile.
     if let Some(default_name) = &config.default_profile {
-        let default_profile = config
-            .profiles
-            .iter()
-            .find(|p| &p.name == default_name)
+        let default_profile = find_profile_by_name(&config.profiles, default_name)
             .ok_or_else(|| {
                 anyhow::anyhow!(
                     "Default profile '{}' not found, but was specified in config. This should have been caught by validation.",
