@@ -7,18 +7,23 @@
 # If not set, Chrome's built-in default ("Default") is used.
 # default_profile = "Default"  # Uncomment and change as needed
 
-# CHROME PATH
-# Specify a custom path to your Chrome executable.
-# Comment out to use auto-detection.
+# CHROME/BROWSER PATH
+# Specify a custom path to your browser executable.
+# Comment out to use auto-detection (Chrome/Chromium only).
+# Note: Vivaldi requires explicit path specification.
 #
-# Linux example:
+# Chrome Linux example:
 # chrome_path = "/usr/bin/google-chrome-stable"
 #
-# macOS example:
+# Chrome macOS example:
 # chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 #
-# Windows example:
+# Chrome Windows example:
 # chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+#
+# Vivaldi examples (requires explicit path):
+# chrome_path = "/usr/bin/vivaldi"  # Linux
+# chrome_path = "/Applications/Vivaldi.app/Contents/MacOS/Vivaldi"  # macOS
 
 #================================================
 # PROFILE CONFIGURATIONS
@@ -59,7 +64,7 @@ url_patterns = ["github.com", "work.example.com", "jira.mycompany.net"]
 # url_patterns = ["localhost", "127.0.0.1", "dev.local"]
 # chrome_path = "/usr/bin/chromium"  # Uses Chromium for development
 #
-# Vivaldi profile example
+# Vivaldi profile example (requires explicit chrome_path)
 # [[profiles]]
 # name = "Research"
 # profile_directory = "Profile 4"
