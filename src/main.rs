@@ -11,6 +11,9 @@ use std::process::Command;
 mod profile_selector;
 use profile_selector::{parse_config, resolve_profile_and_executable, Config};
 
+mod target_url;
+use target_url::normalize_target;
+
 mod config_handler;
 use config_handler::{determine_config_file_path, create_default_config_if_possible, print_config_not_found_error_and_example};
 
@@ -43,11 +46,12 @@ fn main() -> Result<()> {
         .with_context(|| format!("Failed to read config file from {:?}", config_path))?;
     let config: Config = parse_config(&config_str)?;
 
-    let (profile_to_use, chrome_executable) = resolve_profile_and_executable(&config, &args.url)?;
+    let target_url = normalize_target(&args.url)?;
+    let (profile_to_use, chrome_executable) = resolve_profile_and_executable(&config, &target_url)?;
 
     let mut command = Command::new(chrome_executable);
     command.arg(format!("--profile-directory={}", profile_to_use));
-    command.arg(&args.url);
+    command.arg(&target_url);
 
     match command.spawn() {
         Ok(child) => {
