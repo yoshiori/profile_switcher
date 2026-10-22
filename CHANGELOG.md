@@ -5,6 +5,13 @@
 
 * add required url_patterns field to default profile in config template ([239181e](https://github.com/yoshiori/profile_switcher/commit/239181e1f5bb06af6774094dea8b200865549d2a))
 
+## [2.0.2](https://github.com/yoshiori/profile_switcher/compare/v2.0.1...v2.0.2) (2026-10-21)
+
+
+### Bug Fixes
+
+* Open local file paths passed by the Files app ([#13](https://github.com/yoshiori/profile_switcher/issues/13)) ([ea6852b](https://github.com/yoshiori/profile_switcher/commit/ea6852b5255aa1344ae0e2549d3f92b05757c371))
+
 ## [2.0.1](https://github.com/yoshiori/profile_switcher/compare/v2.0.0...v2.0.1) (2025-09-11)
 
 
